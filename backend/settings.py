@@ -153,10 +153,24 @@ CORS_ALLOW_ALL_ORIGINS = True  # Development için
 CORS_ALLOW_CREDENTIALS = True
 
 # Email Settings
-EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')  # ✅ SMTP default
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_USE_SSL = False  # ✅ TLS kullanıyorsak SSL kapalı
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@autismapp.com')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)  # ✅ EMAIL_HOST_USER ile aynı
+
+# ✅ Email Debug - Development için
+if DEBUG:
+    print("="*80)
+    print("📧 EMAIL CONFIGURATION")
+    print("="*80)
+    print(f"✉️  Backend: {EMAIL_BACKEND}")
+    print(f"🌐 Host: {EMAIL_HOST}:{EMAIL_PORT}")
+    print(f"🔐 TLS: {EMAIL_USE_TLS} | SSL: {EMAIL_USE_SSL}")
+    print(f"👤 User: {EMAIL_HOST_USER or '❌ NOT SET'}")
+    print(f"🔑 Password: {'✅ SET (' + str(len(EMAIL_HOST_PASSWORD)) + ' chars)' if EMAIL_HOST_PASSWORD else '❌ NOT SET'}")
+    print(f"📨 From: {DEFAULT_FROM_EMAIL}")
+    print("="*80)

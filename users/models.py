@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+import uuid
 
 
 class UserManager(BaseUserManager):
@@ -8,6 +9,11 @@ class UserManager(BaseUserManager):
             raise ValueError('Email adresi zorunludur')
         
         email = self.normalize_email(email)
+        
+        # Username otomatik oluştur (eğer verilmemişse)
+        if not extra_fields.get('username'):
+            extra_fields['username'] = email.split('@')[0] + str(uuid.uuid4())[:8]
+        
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -17,6 +23,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('role', 'individual')
         
         return self.create_user(email, password, **extra_fields)
 
@@ -38,13 +45,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     username = models.CharField(
         max_length=150, 
-        unique=True, 
-        null=True, 
-        blank=True,
+        unique=True,
         verbose_name='Kullanıcı Adı'
     )
     email = models.EmailField(unique=True, verbose_name='E-posta')
-    full_name = models.CharField(max_length=255, verbose_name='Ad Soyad')
+    full_name = models.CharField(max_length=255, blank=True, verbose_name='Ad Soyad')
     role = models.CharField(
         max_length=30,
         choices=ROLE_CHOICES,
@@ -66,7 +71,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['full_name']
+    REQUIRED_FIELDS = ['username']  # createsuperuser için
     
     class Meta:
         db_table = 'users_user'
@@ -74,7 +79,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = 'Kullanıcılar'
     
     def __str__(self):
-        return f"{self.full_name} ({self.get_role_display()})"
+        return f"{self.full_name or self.email} ({self.get_role_display()})"
     
     def is_individual(self):
         """Bağımsız birey mi?"""
