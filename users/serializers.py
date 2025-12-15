@@ -14,12 +14,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             'email', 
             'username', 
             'full_name', 
-            'role',  # ✅ Frontend'den direkt role alacağız
+            'role',
             'password', 
             'password_confirm',
         ]
         extra_kwargs = {
-            'role': {'required': True},  # ✅ Role zorunlu
+            'role': {'required': True},
         }
     
     def validate(self, attrs):
@@ -74,24 +74,56 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
+    """Login serializer - Email veya Username ile giriş"""
+    email = serializers.CharField(required=True)  # ✅ Email veya username buraya gelecek
     password = serializers.CharField(write_only=True, required=True)
     
     def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
+        """Email veya username ile giriş kontrolü"""
+        email_or_username = attrs.get('email', '').strip()
+        password = attrs.get('password', '')
         
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            raise serializers.ValidationError('Email veya şifre hatalı')
+        print(f"🔍 Login validation - Email/Username: {email_or_username}")
         
+        if not email_or_username:
+            raise serializers.ValidationError({'email': 'Email veya kullanıcı adı gereklidir'})
+        
+        if not password:
+            raise serializers.ValidationError({'password': 'Şifre gereklidir'})
+        
+        # ✅ Email mi yoksa username mi kontrol et
+        user = None
+        
+        if '@' in email_or_username:
+            # Email ile giriş
+            try:
+                user = User.objects.get(email__iexact=email_or_username)
+                print(f"✅ User email ile bulundu: {user.email}")
+            except User.DoesNotExist:
+                print(f"❌ User email ile bulunamadı: {email_or_username}")
+        else:
+            # Username ile giriş
+            try:
+                user = User.objects.get(username__iexact=email_or_username)
+                print(f"✅ User username ile bulundu: {user.username} ({user.email})")
+            except User.DoesNotExist:
+                print(f"❌ User username ile bulunamadı: {email_or_username}")
+        
+        # User bulunamadıysa hata
+        if not user:
+            raise serializers.ValidationError({'detail': 'Email/Kullanıcı adı veya şifre hatalı'})
+        
+        # Şifre kontrolü
         if not user.check_password(password):
-            raise serializers.ValidationError('Email veya şifre hatalı')
+            print(f"❌ Şifre yanlış")
+            raise serializers.ValidationError({'detail': 'Email/Kullanıcı adı veya şifre hatalı'})
         
+        # Aktif mi?
         if not user.is_active:
-            raise serializers.ValidationError('Hesap aktif değil')
+            print(f"❌ User aktif değil: {user.email}")
+            raise serializers.ValidationError({'detail': 'Hesap aktif değil'})
         
+        print(f"✅ Login validation başarılı - User: {user.email}, Role: {user.role}")
         attrs['user'] = user
         return attrs
 

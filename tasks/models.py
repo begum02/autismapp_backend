@@ -39,8 +39,8 @@ class Task(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='assigned_tasks',
-        verbose_name='Atanan Kullanıcı',
-        db_column='user_id'  # Database'de user_id olarak kayıtlı
+        verbose_name='Atanan Kullanıcı'
+        # ✅ db_column kaldırıldı - Django otomatik assigned_to_id yapacak
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -67,7 +67,7 @@ class Task(models.Model):
     
     # Zaman Bilgileri
     scheduled_date = models.DateField(verbose_name='Tarih', db_column='date')
-    start_time = models.TimeField(verbose_name='Başlangıç Saati')
+    start_time = models.TimeField(blank=True, null=True, verbose_name='Başlangıç Saati')  # ✅ Opsiyonel
     end_time = models.TimeField(blank=True, null=True, verbose_name='Bitiş Saati')
     estimated_duration = models.IntegerField(
         blank=True,

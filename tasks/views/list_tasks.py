@@ -3,15 +3,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import get_user_model  # ← EKLENDİ
-from tasks.models import Task  # ← DÜZELTİLDİ (. yerine tasks.)
-from tasks.serializers import TaskSerializer  # ← DÜZELTİLDİ
+from django.contrib.auth import get_user_model
+from ..models import Task
+from ..serializers import TaskSerializer
 
 User = get_user_model()
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_my_tasks(request):
+def list_my_tasks_view(request):
     """
     Kendi görevlerimi listele
     
@@ -43,7 +43,7 @@ def list_my_tasks(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_managed_tasks(request):
+def list_managed_tasks_view(request):
     """
     Sorumlu kişi: Yönettiği bireylerin görevlerini listeler
     
@@ -90,7 +90,7 @@ def list_managed_tasks(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def task_list(request):
+def list_tasks_view(request):
     """
     Görev listesi - filtreleme desteği ile
     """
@@ -115,6 +115,8 @@ def task_list(request):
     
     tasks = tasks.order_by('scheduled_date', 'start_time')
     serializer = TaskSerializer(tasks, many=True)
+    
+    print(f'✅ {tasks.count()} görev listelendi')
     
     return Response({
         'count': tasks.count(),

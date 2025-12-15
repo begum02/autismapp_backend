@@ -7,24 +7,29 @@ from ..models import Task
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_task(request, task_id):
+def delete_task_view(request, task_id):
     """
     Görevi sil
-    
-    Sadece görev sahibi (created_by) veya görevin atandığı kişi (assigned_to) silebilir.
     """
-    user = request.user
-    
-    task = get_object_or_404(Task, id=task_id)
-    
-    # Sadece görev sahibi veya görevin atandığı kişi silebilir
-    if task.assigned_to != user and task.created_by != user:
+    try:
+        task = Task.objects.get(id=task_id)
+    except Task.DoesNotExist:
         return Response(
-            {"detail": "Bu görevi silme yetkiniz yok. Sadece görev sahibi veya görevi atanan kişi silebilir."},
+            {'error': 'Görev bulunamadı'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # Yetki kontrolü
+    if task.assigned_to != request.user and task.created_by != request.user:
+        return Response(
+            {"error": "Bu görevi silme yetkiniz yok"},
             status=status.HTTP_403_FORBIDDEN
         )
     
+    task_title = task.title
     task.delete()
+    
+    print(f'✅ Görev silindi: {task_title}')
     
     return Response(
         {"message": "Görev başarıyla silindi"},

@@ -8,33 +8,37 @@ from ..serializers import TaskSerializer
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def start_task(request, task_id):
+def start_task_view(request, task_id):
     """
     Görevi başlat
-    
-    Sadece görev sahibi (created_by) veya görevin atandığı kişi (assigned_to) başlatabilir.
     """
-    user = request.user
-    
-    task = get_object_or_404(Task, id=task_id)
-    
-    # Sadece görev sahibi veya görevin atandığı kişi başlatabilir
-    if task.assigned_to != user and task.created_by != user:
+    try:
+        task = Task.objects.get(id=task_id)
+    except Task.DoesNotExist:
         return Response(
-            {"detail": "Bu görevi başlatma yetkiniz yok. Sadece görev sahibi veya görevi atanan kişi başlatabilir."},
+            {'error': 'Görev bulunamadı'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # Yetki kontrolü
+    if task.assigned_to != request.user and task.created_by != request.user:
+        return Response(
+            {"error": "Bu görevi başlatma yetkiniz yok"},
             status=status.HTTP_403_FORBIDDEN
         )
     
     # Status kontrolü - sadece pending başlatılabilir
     if task.status != 'pending':
         return Response(
-            {"detail": f"Sadece bekleyen görevler başlatılabilir. Mevcut durum: {task.get_status_display()}"},
+            {"error": f"Sadece bekleyen görevler başlatılabilir. Mevcut durum: {task.status}"},
             status=status.HTTP_400_BAD_REQUEST
         )
     
     # Görevi başlat
     task.status = 'in_progress'
     task.save()
+    
+    print(f'✅ Görev başlatıldı: {task.title}')
     
     return Response(
         {

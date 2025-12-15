@@ -1,19 +1,26 @@
 from django.urls import path
-from .views import (
-    register, login, logout, profile, update_profile,
-    change_password, list_users, user_detail, delete_account
-)
+from .views.auth_views import register_view, login_view, logout_view
+from .views.profile_views import profile_view, update_profile_view
+from .views.password_views import change_password_view
+from .views.user_management_views import list_users_view, user_detail_view, delete_account_view
 
 app_name = 'users'
 
 urlpatterns = [
-    path('register/', register, name='register'),
-    path('login/', login, name='login'),
-    path('logout/', logout, name='logout'),
-    path('profile/', profile, name='profile'),
-    path('profile/update/', update_profile, name='update_profile'),
-    path('password/change/', change_password, name='change_password'),
-    path('users/', list_users, name='list_users'),
-    path('users/<int:user_id>/', user_detail, name='user_detail'),
-    path('account/delete/', delete_account, name='delete_account'),
+    # Auth endpoints
+    path('register/', register_view, name='register'),
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    
+    # Profile endpoints
+    path('profile/', profile_view, name='profile'),
+    path('profile/update/', update_profile_view, name='update_profile'),
+    
+    # Password endpoints
+    path('password/change/', change_password_view, name='change_password'),
+    
+    # User management endpoints
+    path('list/', list_users_view, name='list_users'),
+    path('<int:user_id>/', user_detail_view, name='user_detail'),
+    path('account/delete/', delete_account_view, name='delete_account'),
 ]

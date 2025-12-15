@@ -1,33 +1,37 @@
 from django.urls import path
-from .views import (
-    task_list,
-    create_task,
-    task_detail,
-    update_task,
-    delete_task,
-    start_task,
-    complete_task,
-    cancel_task,
-    task_statistics,
-    user_statistics,
-)
+
+from .views.task_notifications import task_notifications_view
+from .views.list_tasks import list_tasks_view
+from .views.create_task import create_task_view
+from .views.task_detail import task_detail_view
+from .views.update_task import update_task_view
+from .views.delete_task import delete_task_view
+from .views.start_task import start_task_view
+from .views.complete_task import complete_task_view
+from .views.cancel_task import cancel_task_view
+from .views.assign_user import assign_user_view
+from .views.statistics import user_statistics_view, today_completed_count_view, assignable_users_view
+
+app_name = 'tasks'
 
 urlpatterns = [
-    # Görev listesi
-    path('', task_list, name='task-list'),
+    # Task CRUD
+    path('', list_tasks_view, name='task-list'),
+    path('create/', create_task_view, name='task-create'),
+    path('<int:task_id>/', task_detail_view, name='task-detail'),
+    path('<int:task_id>/update/', update_task_view, name='task-update'),
+    path('<int:task_id>/delete/', delete_task_view, name='task-delete'),
     
-    # Görev CRUD
-    path('create/', create_task, name='task-create'),
-    path('<int:task_id>/', task_detail, name='task-detail'),
-    path('<int:task_id>/update/', update_task, name='task-update'),
-    path('<int:task_id>/delete/', delete_task, name='task-delete'),
+    # Task actions
+    path('<int:task_id>/start/', start_task_view, name='task-start'),
+    path('<int:task_id>/complete/', complete_task_view, name='task-complete'),
+    path('<int:task_id>/cancel/', cancel_task_view, name='task-cancel'),
+    path('<int:task_id>/assign/', assign_user_view, name='task-assign'),
     
-    # Görev durumu değişiklikleri
-    path('<int:task_id>/start/', start_task, name='task-start'),
-    path('<int:task_id>/complete/', complete_task, name='task-complete'),
-    path('<int:task_id>/cancel/', cancel_task, name='task-cancel'),
-    
-    # İstatistikler
-    path('statistics/', task_statistics, name='task-statistics'),
-    path('user-statistics/<int:user_id>/', user_statistics, name='user-statistics'),
+    # Statistics
+    path('statistics/<int:user_id>/', user_statistics_view, name='user-statistics'),
+    path('today-completed/', today_completed_count_view, name='today-completed'),
+    path('assignable-users/', assignable_users_view, name='assignable-users'),
+    #notifications
+   path('notifications/', task_notifications_view, name='task-notifications'),  # ✅ Yeni
 ]

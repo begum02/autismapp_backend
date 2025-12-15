@@ -9,13 +9,10 @@ User = get_user_model()
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_users(request):
-    """Kullanıcı listesi (sadece responsible_person için)"""
-    if request.user.role != 'responsible_person':
-        return Response({
-            'error': 'Bu işlem için yetkiniz yok'
-        }, status=status.HTTP_403_FORBIDDEN)
-    
+def list_users_view(request):
+    """
+    Kullanıcı listesi
+    """
     users = User.objects.all()
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -23,17 +20,12 @@ def list_users(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def user_detail(request, user_id):
-    """Kullanıcı detayı"""
+def user_detail_view(request, user_id):
+    """
+    Kullanıcı detayı
+    """
     try:
         user = User.objects.get(id=user_id)
-        
-        # Sadece kendi profilini veya responsible_person görebilir
-        if request.user.id != user_id and request.user.role != 'responsible_person':
-            return Response({
-                'error': 'Bu işlem için yetkiniz yok'
-            }, status=status.HTTP_403_FORBIDDEN)
-        
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
@@ -44,12 +36,15 @@ def user_detail(request, user_id):
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_account(request):
-    """Hesap silme"""
+def delete_account_view(request):
+    """
+    Hesap silme
+    """
     user = request.user
-    user.is_active = False
-    user.save()
+    user.delete()
+    
+    print(f'✅ Hesap silindi: {user.email}')
     
     return Response({
-        'message': 'Hesabınız devre dışı bırakıldı'
+        'message': 'Hesap başarıyla silindi'
     }, status=status.HTTP_200_OK)
