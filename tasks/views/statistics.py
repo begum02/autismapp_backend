@@ -6,6 +6,7 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from ..models import Task
+from datetime import datetime, time
 
 User = get_user_model()
 
@@ -102,4 +103,90 @@ def assignable_users_view(request):
     return Response({
         'count': 0,
         'results': []
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def task_time_statistics(request):
+    """
+    Görev zaman istatistikleri
+    """
+    user = request.user
+    today = timezone.now().date()
+    start_of_week = today - timezone.timedelta(days=today.weekday())
+    start_of_month = today.replace(day=1)
+    
+    today_completed = Task.objects.filter(assigned_to=user, status='completed', updated_at__date=today).count()
+    today_cancelled = Task.objects.filter(assigned_to=user, status='cancelled', updated_at__date=today).count()
+    today_in_progress = Task.objects.filter(assigned_to=user, status='in_progress', updated_at__date=today).count()
+    
+    start_datetime = datetime.combine(start_of_week, time.min, tzinfo=timezone.get_current_timezone())
+    end_datetime = datetime.combine(today, time.max, tzinfo=timezone.get_current_timezone())
+
+    week_completed = Task.objects.filter(
+        assigned_to=user,
+        status='completed',
+        updated_at__range=[start_datetime, end_datetime]
+    ).count()
+    week_cancelled = Task.objects.filter(assigned_to=user, status='cancelled', updated_at__range=[start_of_week, today]).count()
+    week_in_progress = Task.objects.filter(assigned_to=user, status='in_progress', updated_at__range=[start_of_week, today]).count()
+    
+    month_completed = Task.objects.filter(assigned_to=user, status='completed', updated_at__month=today.month).count()
+    month_cancelled = Task.objects.filter(assigned_to=user, status='cancelled', updated_at__month=today.month).count()
+    month_in_progress = Task.objects.filter(assigned_to=user, status='in_progress', updated_at__month=today.month).count()
+    
+    return Response({
+        "today_completed": today_completed,
+        "today_cancelled": today_cancelled,
+        "today_in_progress": today_in_progress,
+        "week_completed": week_completed,
+        "week_cancelled": week_cancelled,
+        "week_in_progress": week_in_progress,
+        "month_completed": month_completed,
+        "month_cancelled": month_cancelled,
+        "month_in_progress": month_in_progress
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_time_statistics_view(request, user_id):
+    """
+    Kullanıcıya özel görev zaman istatistikleri
+    """
+    user = User.objects.get(id=user_id)
+    today = timezone.now().date()
+    start_of_week = today - timezone.timedelta(days=today.weekday())
+    start_of_month = today.replace(day=1)
+
+    today_completed = Task.objects.filter(assigned_to=user, status='completed', updated_at__date=today).count()
+    today_cancelled = Task.objects.filter(assigned_to=user, status='cancelled', updated_at__date=today).count()
+    today_in_progress = Task.objects.filter(assigned_to=user, status='in_progress', updated_at__date=today).count()
+
+    start_datetime = datetime.combine(start_of_week, time.min, tzinfo=timezone.get_current_timezone())
+    end_datetime = datetime.combine(today, time.max, tzinfo=timezone.get_current_timezone())
+
+    week_completed = Task.objects.filter(
+        assigned_to=user,
+        status='completed',
+        updated_at__range=[start_datetime, end_datetime]
+    ).count()
+    week_cancelled = Task.objects.filter(assigned_to=user, status='cancelled', updated_at__range=[start_of_week, today]).count()
+    week_in_progress = Task.objects.filter(assigned_to=user, status='in_progress', updated_at__range=[start_of_week, today]).count()
+
+    month_completed = Task.objects.filter(assigned_to=user, status='completed', updated_at__month=today.month).count()
+    month_cancelled = Task.objects.filter(assigned_to=user, status='cancelled', updated_at__month=today.month).count()
+    month_in_progress = Task.objects.filter(assigned_to=user, status='in_progress', updated_at__month=today.month).count()
+
+    return Response({
+        "today_completed": today_completed,
+        "today_cancelled": today_cancelled,
+        "today_in_progress": today_in_progress,
+        "week_completed": week_completed,
+        "week_cancelled": week_cancelled,
+        "week_in_progress": week_in_progress,
+        "month_completed": month_completed,
+        "month_cancelled": month_cancelled,
+        "month_in_progress": month_in_progress
     }, status=status.HTTP_200_OK)

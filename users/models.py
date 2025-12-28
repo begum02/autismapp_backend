@@ -62,6 +62,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True,
         verbose_name='Profil Resmi'
     )
+    push_token = models.CharField(max_length=255, blank=True, null=True, verbose_name='Push Token')
     
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

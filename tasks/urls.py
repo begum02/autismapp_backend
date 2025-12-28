@@ -10,7 +10,7 @@ from .views.start_task import start_task_view
 from .views.complete_task import complete_task_view
 from .views.cancel_task import cancel_task_view
 from .views.assign_user import assign_user_view
-from .views.statistics import user_statistics_view, today_completed_count_view, assignable_users_view
+from .views.statistics import task_statistics, user_statistics_view, today_completed_count_view, assignable_users_view, user_time_statistics_view
 
 app_name = 'tasks'
 
@@ -29,9 +29,11 @@ urlpatterns = [
     path('<int:task_id>/assign/', assign_user_view, name='task-assign'),
     
     # Statistics
-    path('statistics/<int:user_id>/', user_statistics_view, name='user-statistics'),
+    path('statistics/<int:user_id>/', user_statistics_view),
+    path('statistics/', task_statistics),
     path('today-completed/', today_completed_count_view, name='today-completed'),
     path('assignable-users/', assignable_users_view, name='assignable-users'),
     #notifications
    path('notifications/', task_notifications_view, name='task-notifications'),  # ✅ Yeni
+   path('time-statistics/<int:user_id>/', user_time_statistics_view),
 ]

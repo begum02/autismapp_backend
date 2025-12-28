@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from ..models import Task
 from ..serializers import TaskSerializer
+import requests
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -46,6 +47,8 @@ def complete_task_view(request, task_id):
     
     print(f'✅ Görev tamamlandı: {task.title}')
     
+    send_push_notification(task.assigned_to.push_token, "Görev Tamamlandı", f"{task.title} adlı görev başarıyla tamamlandı!")
+    
     return Response(
         {
             "message": "Görev başarıyla tamamlandı! 🎉",
@@ -53,3 +56,13 @@ def complete_task_view(request, task_id):
         },
         status=status.HTTP_200_OK
     )
+
+def send_push_notification(push_token, title, message):
+    url = "https://exp.host/--/api/v2/push/send"
+    payload = {
+        "to": push_token,
+        "title": title,
+        "body": message,
+        "sound": "default"
+    }
+    requests.post(url, json=payload)

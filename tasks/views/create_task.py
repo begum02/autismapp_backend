@@ -9,6 +9,7 @@ from django.core.cache import cache
 from django.contrib.auth import get_user_model  # ✅ Django'nun standart yolu
 import json
 import traceback
+from django.db.models import Q
 
 User = get_user_model()  # ✅ CustomUser modelini al
 
@@ -23,6 +24,20 @@ def create_task_view(request):
         
         # ✅ assigned_to kontrolü
         assigned_to_id = request.data.get('assigned_to')
+        scheduled_date = request.data.get('scheduled_date')
+        title = request.data.get('title')
+
+        # Duplicate kontrolü
+        if Task.objects.filter(
+            title=title,
+            scheduled_date=scheduled_date,
+            assigned_to_id=assigned_to_id
+        ).exists():
+            return Response(
+                {'error': 'Bu kullanıcıya aynı başlık ve tarihte zaten bir görev atanmış.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         if not assigned_to_id:
             return Response(
                 {'error': 'assigned_to alanı zorunludur'},

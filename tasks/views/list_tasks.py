@@ -91,33 +91,29 @@ def list_managed_tasks_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_tasks_view(request):
-    """
-    Görev listesi - filtreleme desteği ile
-    """
     user = request.user
-    tasks = Task.objects.filter(assigned_to=user)
-    
+    tasks = Task.objects.all()  # <-- Sadece assigned_to=user yerine tüm görevler
+
+    # assigned_to filtresi (sorumlu kişiler için)
+    assigned_to = request.query_params.get('assigned_to')
+    if assigned_to:
+        tasks = tasks.filter(assigned_to_id=assigned_to)
+
     # Tarih filtresi
-    date = request.query_params.get('date')
-    if date:
-        tasks = tasks.filter(scheduled_date=date)
-    
+    date_filter = request.query_params.get('date')
+    if date_filter:
+        tasks = tasks.filter(scheduled_date=date_filter)
+
     # Durum filtresi
     status_filter = request.query_params.get('status')
     if status_filter:
         tasks = tasks.filter(status=status_filter)
-    
-    # assigned_to filtresi (sorumlu kişiler için)
-    if user.role == 'responsible_person':
-        assigned_to = request.query_params.get('assigned_to')
-        if assigned_to:
-            tasks = Task.objects.filter(assigned_to_id=assigned_to)
-    
+
     tasks = tasks.order_by('scheduled_date', 'start_time')
     serializer = TaskSerializer(tasks, many=True)
-    
+
     print(f'✅ {tasks.count()} görev listelendi')
-    
+
     return Response({
         'count': tasks.count(),
         'results': serializer.data

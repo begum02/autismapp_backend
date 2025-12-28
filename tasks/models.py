@@ -140,6 +140,7 @@ class Task(models.Model):
         verbose_name = 'Görev'
         verbose_name_plural = 'Görevler'
         ordering = ['-scheduled_date', '-start_time']
+        unique_together = ('title', 'scheduled_date','start_time','end_time', 'assigned_to')
     
     def __str__(self):
         return f"{self.title} - {self.assigned_to.email}"
